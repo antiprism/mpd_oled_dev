@@ -119,13 +119,7 @@ Please report issues, or ask for help with the spectrum display not working, at
 *Note: The program can be run without the audio copy enabled, in*
 *which case the spectrum analyser area will be blank*
 
-Install a service file. This will overwrite an existing mpd_oled
-service file
-```
-sudo mpd_oled_service_install
-```
-
-The mpd_oled program can now be run with `sudo mpd_oled_service_edit` (plus
+The mpd_oled program can be run with `sudo mpd_oled_service_edit` (plus
 options), and this also sets up mpd_oled with the same options as a service
 to be run at boot. Rerunning `sudo mpd_oled_service_edit` with different
 options will stop the current running mpd_oled and start it again with
@@ -137,8 +131,7 @@ The OLED configuration MUST be specified with -o, and is a list of values
 and settings separated by commas. The first three parts are required, and
 specify (in order) the OLED controller, model and communicatons protocol. See
 [OLED configuration with option -o](https://github.com/antiprism/mpd_oled_dev#oled-configuration-with-option--o)
-(or run `mpd_oled -o help`) for full details
-Examples:
+(or run `mpd_oled -o help`) for full details. Examples
 * Adafruit
   - `SSD1306,128X64,SPI`
   - `SSD1306,128X64,SPI,dc=24,reset=25`
@@ -154,7 +147,7 @@ An example command, for a generic I2C SH1106 display with
 a display of 10 bars and a gap of 1 pixel between bars and a framerate
 of 20Hz is
 ```
-sudo mpd_oled_service_edit -o SH1106,128X64,I2C -b 21 -g 1 -f 20 -c alsa,plughw:Loopback,1
+sudo mpd_oled_service_edit -o SH1106,128X64,I2C -b 10 -g 1 -f 20 -c alsa,plughw:Loopback,1
 ```
 
 Add extra controller settings to the option -o argument after the
