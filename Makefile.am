@@ -15,9 +15,7 @@ docdoc_DATA = \
 	doc/FAQ.md \
 	doc/install_moode7_deb.md \
 	doc/install_moode7_source.md \
-	doc/install_volumio2_deb.md \
 	doc/install_volumio2_source.md \
-	doc/install_raudio1_zst.md \
 	doc/install_raudio1_source.md \
 	doc/wiring_i2c.png \
 	doc/wiring_spi.png
