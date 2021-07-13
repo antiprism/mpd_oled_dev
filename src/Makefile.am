@@ -20,13 +20,13 @@ mpd_oled_LDFLAGS = -static-libstdc++
 
 AM_CPPFLAGS =
 if LIBMPDCLIENT_LOCAL
-   mpd_oled_LDADD += $(top_srcdir)/$(LIBMPDCLIENT_TMP_DIR)/libmpdclient.a
-   AM_CPPFLAGS += -I$(top_srcdir)/$(LIBMPDCLIENT_TMP_DIR)/include
+   mpd_oled_LDADD += $(top_builddir)/$(LIBMPDCLIENT_TMP_DIR)/libmpdclient.a
+   AM_CPPFLAGS += -I$(top_builddir)/$(LIBMPDCLIENT_TMP_DIR)/include
 endif
 
 if LIBU8G2_LOCAL
-   mpd_oled_LDADD += $(top_srcdir)/$(LIBU8G2_TMP_DIR)/libu8g2arm.a
-   AM_CPPFLAGS += -I$(top_srcdir)/$(LIBU8G2_TMP_DIR)/include
+   mpd_oled_LDADD += $(top_builddir)/$(LIBU8G2_TMP_DIR)/libu8g2arm.a
+   AM_CPPFLAGS += -I$(top_builddir)/$(LIBU8G2_TMP_DIR)/include
 endif
 
 

@@ -61,8 +61,8 @@ make
 Download, build and install mpd_oled.
 ```
 cd ..   # if you are still in the cava source directory
-git clone https://github.com/antiprism/mpd_oled
-cd mpd_oled
+git clone https://github.com/antiprism/mpd_oled_dev
+cd mpd_oled_dev
 ./bootstrap
 CPPFLAGS="-W -Wall -Wno-psabi" ./configure --prefix=/usr/local
 make
@@ -135,79 +135,88 @@ command for a console based application where you can specify your location
 sudo dpkg-reconfigure tzdata
 ```
 
-## Configure mpd_oled
+## Configure mpd_oled and set to run at boot
 
 *Note: The program can be run without the audio copy enabled, in*
 *which case the spectrum analyser area will be blank*
 
-The OLED type MUST be specified with -o from the following list:
-    1 - Adafruit (SSD1306, SSD1309) SPI 128x64,
-    3 - Adafruit (SSD1306, SSD1309) I2C 128x64,
-    4 - Seeed I2C 128x64,
-    6 - SH1106 (SSH1106) I2C 128x64.
-    7 - SH1106 (SSH1106) SPI 128x64.
+Install a service file. This will overwrite an existing mpd_oled
+service file
+```
+sudo mpd_oled_service_install
+```
 
-E.g. the command for a generic I2C SH1106 display (OLED type 6) with
+The mpd_oled program can now be run with `sudo mpd_oled_service_edit` (plus
+options), and this also sets up mpd_oled with the same options as a service
+to be run at boot. Rerunning `sudo mpd_oled_service_edit` with different
+options will stop the current running mpd_oled and start it again with
+the new options. (Test commands can also be run with `mpd_oled` (plus
+options), and stopped with Ctrl-C, but ensure that no other copy of
+mpd_oled is running).
+
+The OLED configuration MUST be specified with -o, and is a list of values
+and settings separated by commas. The first three parts are required, and
+specify (in order) the OLED controller, model and communicatons protocol. See
+[OLED configuration with option -o](https://github.com/antiprism/mpd_oled_dev#oled-configuration-with-option--o)
+(or run `mpd_oled -o help`) for full details
+Examples:
+* Adafruit
+  - `SSD1306,128X64,SPI`
+  - `SSD1306,128X64,SPI,dc=24,reset=25`
+  - `SSD1306,128X64,I2C`
+  - `SSD1309,128X64,SPI`
+  - `SSD1309,128X64,I2C`
+* SH1196
+  - `SH1106,128X64,SPI`
+  - `SH1106,128X64,SPI,dc=24,reset=25`
+  - `SH1106,128X64,I2C`
+
+An example command, for a generic I2C SH1106 display with
 a display of 10 bars and a gap of 1 pixel between bars and a framerate
 of 20Hz is
 ```
-sudo mpd_oled -o 6 -b 10 -g 1 -f 20
+sudo mpd_oled_service_edit -o SH1106,128X64,I2C -b 21 -g 1 -f 20 -c alsa,plughw:Loopback,1
 ```
-The program can be stopped by pressing Control-C.
 
-For I2C OLEDs (mpd_oled -o 3, 4 or 6) you may need to specify
-the I2C address, find this by running,
-e.g. `sudo i2cdetect -y 1` and then specify the address with mpd_oled -a,
-e.g. `mpd_oled -o6 -a 3d ...`.
-If you have a reset pin connected, specify
-the GPIO number with mpd_oled -r, e.g. `mpd_oled -o6 -r 24 ...`.
-Specify the I2C bus number, if not 1,
-with mpd_oled -B, e.g. `mpd_oled -o6 -B 0 ...`
+Add extra controller settings to the option -o argument after the
+contoller, model, and protocol parts, in the form `,setting_name=value`.
 
-For, SPI OLEDs (mpd_oled -o 1 or 7), you may need to specify your reset pin
-GPIO number (mpd_oled -r, default 25), DC pin GPIO number (mpd_oled -D,
-default 24) or CS value (mpd_oled -S, default 0).
+**For I2C OLEDs** you may need to specify the I2C
+address, find this by running, e.g. `sudo i2cdetect -y 1` and then specify
+the address with the `i2c_address` setting, e.g.
+`sudo mpd_oled_service_edit -o SH1106,128X64,I2C,i2c_address=3d ...`.
+If you have a reset pin connected, specify the GPIO number with the
+`reset` setting, e.g.
+`sudo mpd_oled_service_edit -o SH1106,128X64,I2C,reset=24 ...`.
+Specify the I2C bus number, if not 1, with the `bus_number` setting, e.g.
+`sudo mpd_oled_service_edit -o SH1106,128X64,I2C,bus_number=0 ...`.
 
-If your display is upside down, you can rotate it 180 degrees with option '-R'.
+**For, SPI OLEDs** you *must* specify your DC GPIO number with `dc`, and
+you may need to specify your reset pin GPIO number with `reset`, e.g.
+`sudo mpd_oled_service_edit -o SH1106,128X64,SPI,dc=24,reset=25 ...`.
+Specify the SPI bus number, if not 0, with `bus_number` setting, and
+the CS number, if not 0, with the `cs_number` setting, e.g.
+`sudo mpd_oled_service_edit -o SH1106,128X64,SPI,bus_number=1,cs_number=1 ...`.
+
+If your display is upside down, you can rotate it 180 degrees with setting
+`rotate=2`, e.g.
+`sudo mpd_oled_service_edit -o SH1106,128X64,I2C,rotate=2 ...`.
 
 Once the display is working, play some music and check the spectrum display
 is working and is synchronised with the music. If there are no bars then the
 audio copy may not have been configured correctly. If the bars seem jerky
 or not synchronized with the music then reduce the values of -b and/or -f.
 
-## Install the mpd_oled service
+If you run `sudo mpd_oled_service_edit` without options the service
+file will open in an editor, allowing the full service file to be
+changed, and not just the mpd_oled options.
 
-When you have chosen some suitable options, install and configure
-an mpd_oled service file so that mpd_oled will run at boot.
+If the mpd_oled options are valid the display will be started after
+the editor is closed, and will also be configured to start a boot
 
-Install a service file. This will not overwrite an existing mpd_oled
-service file.
-```
-sudo mpd_oled_service_install
-```
+Check the program is working correctly by looking at the display while
+the player is stopped, paused and playing music.
 
-Edit the service file to include your chosen options. Rerun
-this command any time to change the options. You *must* include a
-valid -o parameter for your OLED. If the command appears to hang,
-allow it some time to complete. If the included mpd_oled options are
-valid then mpd_oled will start running on the display when the
-command completes.
-
-Either, run the command with no options, which will open an editor, then
-add your options (from a successful mpd_oled test command) on the line
-starting `ExecStart` and after `mpd_oled`.
-
-```
-sudo mpd_oled_service_edit     # edit mpd_oled options with editor
-```
-
-Or, append all your options (from a successful mpd_oled test command)
-to the command and the service file will be updated to use these
-optiond for mpd_oled, e.g. the following will cause the service to
-run `mpd_oled -o 6 -b 10'
-```
-sudo mpd_oled_service_edit -o 6 -b 10
-```
 
 ### Extra commands to control the service
 
@@ -221,8 +230,10 @@ sudo systemctl stop mpd_oled      # stop mpd_oled now
 sudo systemctl status mpd_oled    # report the status of the service
 ```
 
-If you wish to uninstall the mpd_oled service (just the service,
-the command does not uninstall the mpd_oled or mpd_oled_cava binaries)
+## Uninstall
+
+Uninstall the mpd_oled service (just the service, not the mpd_oled programs
+or documentation), and the audio copy with
 ```
 sudo mpd_oled_service_uninstall
 ```

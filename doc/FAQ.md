@@ -12,7 +12,7 @@ wish to change the layout then you will need to change the code.
 
 ### What code do I change to customise the display?
 
-In main.cpp there are two simple functions that draw the layout
+In src/main.cpp there are two simple functions that draw the layout
 
    draw_clock():         draws the stop screen
    draw_spect_display(): draws the play/pause screen

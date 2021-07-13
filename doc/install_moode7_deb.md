@@ -54,7 +54,7 @@ Restart the Pi after making any system configuration changes.
 
 This will download and install the most recent mpd_oled binary package
 ```
-wget -N http://pitastic.com/mpd_oled/packages/mpd_oled_moode_install_latest.sh
+wget -N http://pitastic.com/mpd_oled_dev/packages/mpd_oled_moode_install_latest.sh
 sudo bash mpd_oled_moode_install_latest.sh
 ```
 
@@ -113,12 +113,19 @@ to customise the ALSA configuration.
 Please report issues, or ask for help with the spectrum display not working, at
 [Moode ALSA audio copy issues](https://github.com/antiprism/mpd_oled/issues/65).
 
+
 ## Configure mpd_oled and set to run at boot
 
 *Note: The program can be run without the audio copy enabled, in*
 *which case the spectrum analyser area will be blank*
 
-The mpd_oled program can be run with `sudo mpd_oled_service_edit` (plus
+Install a service file. This will overwrite an existing mpd_oled
+service file
+```
+sudo mpd_oled_service_install
+```
+
+The mpd_oled program can now be run with `sudo mpd_oled_service_edit` (plus
 options), and this also sets up mpd_oled with the same options as a service
 to be run at boot. Rerunning `sudo mpd_oled_service_edit` with different
 options will stop the current running mpd_oled and start it again with
@@ -126,32 +133,53 @@ the new options. (Test commands can also be run with `mpd_oled` (plus
 options), and stopped with Ctrl-C, but ensure that no other copy of
 mpd_oled is running).
 
-The OLED type MUST be specified with -o from the following list:
-    1 - Adafruit (SSD1306, SSD1309) SPI 128x64,
-    3 - Adafruit (SSD1306, SSD1309) I2C 128x64,
-    4 - Seeed I2C 128x64,
-    6 - SH1106 (SSH1106) I2C 128x64.
-    7 - SH1106 (SSH1106) SPI 128x64.
+The OLED configuration MUST be specified with -o, and is a list of values
+and settings separated by commas. The first three parts are required, and
+specify (in order) the OLED controller, model and communicatons protocol. See
+[OLED configuration with option -o](https://github.com/antiprism/mpd_oled_dev#oled-configuration-with-option--o)
+(or run `mpd_oled -o help`) for full details
+Examples:
+* Adafruit
+  - `SSD1306,128X64,SPI`
+  - `SSD1306,128X64,SPI,dc=24,reset=25`
+  - `SSD1306,128X64,I2C`
+  - `SSD1309,128X64,SPI`
+  - `SSD1309,128X64,I2C`
+* SH1196
+  - `SH1106,128X64,SPI`
+  - `SH1106,128X64,SPI,dc=24,reset=25`
+  - `SH1106,128X64,I2C`
 
-An example command, for a generic I2C SH1106 display (OLED type 6) with
+An example command, for a generic I2C SH1106 display with
 a display of 10 bars and a gap of 1 pixel between bars and a framerate
 of 20Hz is
 ```
-sudo mpd_oled_service_edit -o 6 -b 10 -g 1 -f 20 -c alsa,plughw:Loopback,1
+sudo mpd_oled_service_edit -o SH1106,128X64,I2C -b 21 -g 1 -f 20 -c alsa,plughw:Loopback,1
 ```
 
-**For I2C OLEDs** (mpd_oled -o 3, 4 or 6) you may need to specify the I2C
+Add extra controller settings to the option -o argument after the
+contoller, model, and protocol parts, in the form `,setting_name=value`.
+
+**For I2C OLEDs** you may need to specify the I2C
 address, find this by running, e.g. `sudo i2cdetect -y 1` and then specify
-the address with option -a, e.g. `sudo mpd_oled_service_edit -o6 -a 3d ...`.
-If you have a reset pin connected, specify the GPIO number with option -r,
-e.g. `sudo mpd_oled_service_edit -o6 -r 24 ...`. Specify the I2C bus number,
-if not 1, with option -B, e.g. `sudo mpd_oled_service_edit -o6 -B 0 ...`
+the address with the `i2c_address` setting, e.g.
+`sudo mpd_oled_service_edit -o SH1106,128X64,I2C,i2c_address=3d ...`.
+If you have a reset pin connected, specify the GPIO number with the
+`reset` setting, e.g.
+`sudo mpd_oled_service_edit -o SH1106,128X64,I2C,reset=24 ...`.
+Specify the I2C bus number, if not 1, with the `bus_number` setting, e.g.
+`sudo mpd_oled_service_edit -o SH1106,128X64,I2C,bus_number=0 ...`.
 
-**For, SPI OLEDs** (option -o 1 or 7), you may need to specify your reset pin
-GPIO number (option -r, default 25), DC pin GPIO number (option -D,
-default 24) or CS value (option -S, default 0).
+**For, SPI OLEDs** you *must* specify your DC GPIO number with `dc`, and
+you may need to specify your reset pin GPIO number with `reset`, e.g.
+`sudo mpd_oled_service_edit -o SH1106,128X64,SPI,dc=24,reset=25 ...`.
+Specify the SPI bus number, if not 0, with `bus_number` setting, and
+the CS number, if not 0, with the `cs_number` setting, e.g.
+`sudo mpd_oled_service_edit -o SH1106,128X64,SPI,bus_number=1,cs_number=1 ...`.
 
-If your display is upside down, you can rotate it 180 degrees with option '-R'.
+If your display is upside down, you can rotate it 180 degrees with setting
+`rotate=2`, e.g.
+`sudo mpd_oled_service_edit -o SH1106,128X64,I2C,rotate=2 ...`.
 
 Once the display is working, play some music and check the spectrum display
 is working and is synchronised with the music. If there are no bars then the
@@ -171,7 +199,8 @@ the player is stopped, paused and playing music.
 
 ### Extra commands to control the service
 
-A few selected commands that can be used to control the service
+Commands from the following list can be run to control the service
+(they do not need to be run from the mpd_oled directory)
 ```
 sudo systemctl enable mpd_oled    # start mpd_oled at boot
 sudo systemctl disable mpd_oled   # don't start mpd_oled at boot
@@ -184,7 +213,6 @@ sudo systemctl status mpd_oled    # report the status of the service
 
 Uninstall with
 ```
-sudo mpd_oled_moode_audio_copy_uninstall
 sudo apt remove mpd-oled
 ```
 

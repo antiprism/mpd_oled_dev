@@ -13,7 +13,7 @@ full list of supported OLEDs is included below
 
 ## Install
 
-A binary installation package is provided for Moode and Volumio,
+A binary installation package is provided for Moode,
 and is the quickest and easiest way to install mpd_oled on this system.
 All other systems should install from source code (Note: the build
 commands take a long time to run on a Pi Zero).
@@ -25,7 +25,6 @@ commands take a long time to run on a Pi Zero).
 
 ### Volumio
 
-* [Install mpd_oled binary package on Volumio 2](doc/install_volumio2_deb.md)
 * [Install mpd_oled from source on Volumio 2](doc/install_volumio2_source.md)
 
 ### rAudio
