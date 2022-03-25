@@ -1,12 +1,7 @@
-# Install instructions for Volumio 2 using source
+# Install instructions for Volumio 3 using source
 
 These instructions are for installing mpd_oled using source on
-Volumio 2.
-
-A binary package is also available, but may not include the very
-latest code, see
-[Install instructions for Volumio 2](install_volumio2_deb.md).
-
+Volumio 3.
 
 ## Base system
 
@@ -19,7 +14,7 @@ available for entering the commands below (e.g.
 Install all the packages needed to build and run cava and mpd_oled
 ```
 sudo apt update
-sudo apt install build-essential git-core autoconf make libtool libfftw3-dev libmpdclient-dev libi2c-dev i2c-tools lm-sensors
+sudo apt install build-essential autoconf make libtool xxd libfftw3-dev libiniparser-dev libmpdclient-dev libi2c-dev i2c-tools lm-sensors
 ```
 
 ## Build and install cava
@@ -41,6 +36,7 @@ cd cava
 ./configure --disable-input-portaudio --disable-input-sndio --disable-output-ncurses --disable-input-pulse --program-prefix=mpd_oled_
 make
 sudo make install-strip
+cd ..    # leave cava directory
 ```
 
 ## Build and install mpd_oled
@@ -55,16 +51,15 @@ mkdir build
 cd build
 CPPFLAGS="-W -Wall -Wno-psabi" ../configure --prefix=/usr/local
 make
-
+cd ../..  # leave libu8g2arm/build directory
 ```
 
 Download, build and install mpd_oled.
 ```
-cd ..   # if you are still in the cava source directory
 git clone https://github.com/antiprism/mpd_oled_dev
 cd mpd_oled_dev
 ./bootstrap
-CPPFLAGS="-W -Wall -Wno-psabi" ./configure --prefix=/usr/local
+LIBU8G2_DIR=../libu8g2arm CPPFLAGS="-W -Wall -Wno-psabi" ./configure --prefix=/usr/local
 make
 sudo make install-strip
 ```
@@ -83,10 +78,9 @@ In /boot/config.txt I have the line `dtparam=i2c_arm=on` (included by default).
 
 The I2C bus speed on your system may be too slow for a reasonable screen
 refresh. Set a higher bus speed by adding the line
-`dtparam=i2c_arm_baudrate=400000` to
-/boot/userconfig.txt (or use /boot/config.txt for Volumio versions before
-2.673), or try a higher value for a higher screen refresh (I use 800000 with a
-25 FPS screen refresh)
+`dtparam=i2c_arm_baudrate=400000`
+to /boot/userconfig.txt, or try a higher value for a higher screen
+refresh (I use 800000 with a 25 FPS screen refresh)
 ```
 sudo nano /boot/userconfig.txt
 ```
@@ -96,8 +90,7 @@ Restart the Pi after making any system configuration changes.
 ### SPI
 I use a cheap 7 pin SPI SSH1106 display with a Raspberry Pi Zero. It is
 [wired like this](wiring_spi.png).
-In /boot/userconfig.txt (or use /boot/config.txt for Volumio versions before
-2.673) I have the line `dtparam=spi=on`.
+In /boot/userconfig.txt I have the line `dtparam=spi=on`.
 ```
 sudo nano /boot/userconfig.txt
 ```

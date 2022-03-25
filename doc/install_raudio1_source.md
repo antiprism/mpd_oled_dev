@@ -1,5 +1,7 @@
 # Install instructions for rAudio  (RuneAudio fork)
 
+THESE INSTRUCTIONS ARE UNTESTED
+
 ## Base system
 
 Install [rAudio](https://github.com/rern/rAudio-1/).
@@ -10,6 +12,7 @@ below (e.g. use SSH, default username 'root', default password 'ros').
 ## Install all dependencies
 
 Install all the packages needed to build and run cava and mpd_oled
+(may need to add xxd and libiniparser)
 ```
 pacman -Syy
 pacman -Sy git autoconf automake make libtool fftw alsa-lib glibc gcc i2c-tools
