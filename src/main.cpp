@@ -22,7 +22,6 @@
   IN THE SOFTWARE.
 */
 
-
 #include "u8x8_d_sdl.h"
 
 #include "display.h"
@@ -31,6 +30,14 @@
 #include "programopts.h"
 #include "timer.h"
 #include "utils.h"
+
+#ifdef HAVE_CONFIG_H
+#include "../config.h"
+#endif
+
+#ifdef ENABLE_SDL
+#include <SDL.h>
+#endif
 
 #include <libu8g2arm/U8g2Controller.h>
 
@@ -53,12 +60,12 @@ using std::vector;
 
 const int SPECT_WIDTH = 64;
 
-U8G2 *p_u8g2 = nullptr;  // for use during signal handling
+U8G2 *p_u8g2 = nullptr; // for use during signal handling
 
 void cleanup(void)
 {
   // Clear and close display
-  if(p_u8g2)
+  if (p_u8g2)
     p_u8g2->clearDisplay();
 #ifdef ENABLE_SDL
   SDL_Quit();
@@ -75,7 +82,7 @@ void signal_handler(int sig)
     break;
   }
   exit(0);
-  //abort();
+  // abort();
 }
 
 void init_signals(void)
@@ -100,12 +107,12 @@ void init_signals(void)
 
 class OledOpts : public ProgramOpts {
 public:
-  const double DEF_SCROLL_RATE = 8;    // pixels per second
-  const double DEF_SCROLL_DELAY = 5;   // second delay before scrolling
-  string oled;                         // OLED type, as string
-  int framerate = 15;                  // frame rate in Hz
-  int bars = 16;                       // number of bars in spectrum
-  int gap = 1;                         // gap between bars, in pixels
+  const double DEF_SCROLL_RATE = 8;  // pixels per second
+  const double DEF_SCROLL_DELAY = 5; // second delay before scrolling
+  string oled;                       // OLED type, as string
+  int framerate = 15;                // frame rate in Hz
+  int bars = 16;                     // number of bars in spectrum
+  int gap = 1;                       // gap between bars, in pixels
   vector<double> scroll;   // rate (pixels per sec), start delay (secs)
   int clock_format = 0;    // 0-3: 0,1 - 24h  2,3 - 12h  0,2 - leading 0
   int date_format = 0;     // 0: DD-MM-YYYY, 1: MM-DD-YYYY
@@ -113,8 +120,8 @@ public:
   string cava_prog_name = "mpd_oled_cava"; // cava executable name
   string cava_method = "fifo";             // fifo, alsa or pulse
   string cava_source;                      // Path to FIFO / alsa device
-  double cava_start_delay = 2;   // delay (secs) after play before starting cava
-  double invert = 0;             // 0 normal, -1 invert, n>0 invert every n hrs
+  double cava_start_delay = 2; // delay (secs) after play before starting cava
+  double invert = 0;           // 0 normal, -1 invert, n>0 invert every n hrs
   Player player;
 
   OledOpts() : ProgramOpts("mpd_oled", "0.02")
@@ -166,9 +173,8 @@ Options
              may help avoid screen burn
   -p <plyr>  Player: mpd, moode, volumio, runeaudio (default: detected)
 )",
-          get_program_name().c_str(), help_ver_text,
-          DEF_SCROLL_RATE, DEF_SCROLL_DELAY, cava_method.c_str(),
-          cava_source.c_str());
+          get_program_name().c_str(), help_ver_text, DEF_SCROLL_RATE,
+          DEF_SCROLL_DELAY, cava_method.c_str(), cava_source.c_str());
 }
 
 void OledOpts::process_command_line(int argc, char **argv)
@@ -187,8 +193,8 @@ void OledOpts::process_command_line(int argc, char **argv)
     case 'o':
       oled = optarg;
       if (oled == "help") {
-         print_oled_list();
-         exit(0);
+        print_oled_list();
+        exit(0);
       }
 
       break;
@@ -481,9 +487,10 @@ void draw_spect_display(U8G2 &u8g2, const display_info &disp_info)
   draw_connection(u8g2, 116, 0, disp_info.conn);
   draw_triangle_slider(u8g2, 100, 0, 12, 8, disp_info.status.get_volume());
 
-    //draw_text(u8g2, 68, 0, disp_info.status.get_kbitrate_str().c_str());
+  // draw_text(u8g2, 68, 0, disp_info.status.get_kbitrate_str().c_str());
   if (disp_info.status.get_kbitrate() > 0)
-    draw_text(u8g2, 68, 0, disp_info.status.get_kbitrate_str(), u8g_font_courB08);
+    draw_text(u8g2, 68, 0, disp_info.status.get_kbitrate_str(),
+              u8g_font_courB08);
 
   u8g2.setMaxClipWindow();
   int clock_offset = (disp_info.clock_format < 2) ? 0 : -2;
@@ -619,10 +626,10 @@ int start_idle_loop(U8G2 *p_u8g2, const OledOpts &opts)
       u8g2.clearBuffer();
 
       bool inv = get_invert(opts.invert);
-      if(inv) {
-         u8g2.setDrawColor(inv);
-         // Clear with box only if inverted (but may need clear always)
-         u8g2.drawBox(0, 0, u8g2.getDisplayWidth(), u8g2.getDisplayHeight());
+      if (inv) {
+        u8g2.setDrawColor(inv);
+        // Clear with box only if inverted (but may need clear always)
+        u8g2.drawBox(0, 0, u8g2.getDisplayWidth(), u8g2.getDisplayHeight());
       }
       u8g2.setDrawColor(!inv);
 
@@ -634,21 +641,28 @@ int start_idle_loop(U8G2 *p_u8g2, const OledOpts &opts)
     }
 
     if (timer.finished()) {
-      //u8g2.initDisplay();   // reset offset (but turns on power save)
-      //u8g2.setPowerSave(0); // turn off power save
+      // u8g2.initDisplay();   // reset offset (but turns on power save)
+      // u8g2.setPowerSave(0); // turn off power save
       if (disp_info.status.get_state() == MPD_STATE_PLAY && fifo_fd < 0) {
-        usleep(opts.cava_start_delay*1000000);
+        usleep(opts.cava_start_delay * 1000000);
         opts.print_status_or_exit(start_cava(&fifo_file, opts));
         fifo_fd = fileno(fifo_file);
       }
 
       timer.set_timer(update_sec); // Reset the timer
     }
+#ifdef ENABLE_SDL
+    SDL_Event e;
+    while (SDL_PollEvent(&e)) {
+      if (e.type == SDL_QUIT) {
+        exit(0);
+      }
+    }
+#endif
   }
 
   return 0;
 }
-
 
 std::vector<std::string> split(const std::string &text,
                                const std::string &delims)
@@ -669,22 +683,22 @@ std::vector<std::string> split(const std::string &text,
 Status init_display(U8G2 **pp_u8g2, string oled)
 {
   auto settings = split(oled, ",");
-  if(settings.size() == 0) {
+  if (settings.size() == 0) {
     return Status::error("must specify a controller");
   }
-  if(settings[0] == "SDL") {
-    if(settings.size() > 2)
+  if (settings[0] == "SDL") {
+    if (settings.size() > 2)
       return Status::error(
           "controller SDL: extra parameters specified (use SDL,WXH)");
     string dim_string = settings.size() == 1 ? "128X64" : settings[1];
     auto dims = split(dim_string, "X");
-    if(dims.size() != 2)
+    if (dims.size() != 2)
       return Status::error("controller SDL: dimensions is not in form WxH");
     int width;
-    if(!read_int(dims[0].c_str(), &width))
+    if (!read_int(dims[0].c_str(), &width))
       return Status::error("controller SDL: width dimension is not a number");
     int height;
-    if(!read_int(dims[1].c_str(), &height))
+    if (!read_int(dims[1].c_str(), &height))
       return Status::error("controller SDL: height dimension is not a number");
 
     *pp_u8g2 = new U8G2;
@@ -694,7 +708,7 @@ Status init_display(U8G2 **pp_u8g2, string oled)
     }
     else {
       delete *pp_u8g2;
-      *pp_u8g2 =  nullptr;
+      *pp_u8g2 = nullptr;
       return Status::error("controller SDL: SDL support was not included");
     }
   }
@@ -711,14 +725,14 @@ Status init_display(U8G2 **pp_u8g2, string oled)
       return Status::error(errmsg);
 
     for (size_t i = 3; i < settings.size(); i++) {
-      if(!setup.set_value(settings[i], errmsg))
+      if (!setup.set_value(settings[i], errmsg))
         return Status::error(errmsg);
     }
 
     *pp_u8g2 = new U8G2;
-    if(!setup.init(*pp_u8g2, errmsg)) {
+    if (!setup.init(*pp_u8g2, errmsg)) {
       delete *pp_u8g2;
-      *pp_u8g2 =  nullptr;
+      *pp_u8g2 = nullptr;
       return Status::error("controller type '" + settings[0] + "', name '" +
                            settings[1] + "', protocol '" + settings[2] +
                            "': " + errmsg);
@@ -727,7 +741,6 @@ Status init_display(U8G2 **pp_u8g2, string oled)
 
   return Status::ok();
 }
-
 
 int main(int argc, char **argv)
 {
